@@ -6,6 +6,7 @@ import { DataSource } from 'typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/configuration';
 import { getEnvFilePath } from './utils/envLoader';
+import { LinepayModule } from './linepay/linepay.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { getEnvFilePath } from './utils/envLoader';
       }),
       inject: [ConfigService],
     }),
+    LinepayModule,
   ],
   controllers: [AppController],
   providers: [ConfigModule, AppService],
