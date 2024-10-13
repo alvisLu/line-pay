@@ -25,7 +25,6 @@ export class LinepayController {
     @Query('transactionId') transactionId: string,
     @Query('orderId') orderId: string,
   ) {
-    return { transactionId, orderId };
-    // return this.linepayService.confirmPayment(transactionId, orderId);
+    return this.linepayService.confirm(transactionId, orderId);
   }
 }

@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { firstValueFrom } from 'rxjs';
 import { RequestPaymentDto } from './dto/request-payment.dto';
+import orders from './test-orders';
 
 @Injectable()
 export class LinepayService {
@@ -22,6 +23,16 @@ export class LinepayService {
       'linePay.channelSecret',
     );
     this.apiUrl = this.configService.get<string>('linePay.apiUrl');
+  }
+  /*
+   * 模擬查詢訂單
+   */
+  private findOrder(orderId: string) {
+    const order = orders.find((order) => order.id === orderId);
+    if (!order) {
+      throw new NotFoundException(`order not found`);
+    }
+    return order;
   }
 
   private createSignature(uri: string, body: string, nonce: string): string {
@@ -62,18 +73,24 @@ export class LinepayService {
   async onlinePayment(dto: RequestPaymentDto) {
     const { amount, orderId, packages } = dto;
     const uri = '/v3/payments/request';
-    const testOrderId = `${orderId}-${Date.now()}`;
 
     const body = {
       amount,
       packages,
-      orderId: testOrderId,
+      orderId,
       currency: 'TWD',
       redirectUrls: {
         confirmUrl: `${this.serviceHost}/linepay/confirm`,
       },
     };
 
+    return this.handleApiRequest('POST', uri, body);
+  }
+
+  async confirm(transactionId: string, orderId: string) {
+    const uri = `/v3/payments/${transactionId}/confirm`;
+    const order = this.findOrder(orderId);
+    const body = { amount: order.amount, currency: 'TWD' };
     return this.handleApiRequest('POST', uri, body);
   }
 }
